@@ -27,7 +27,7 @@ model student {
   address       String
   X_per         Float
   XII_per       Float
-  branch_assign String
+  branch_assign String?
   father_name   String
   pref_1        String
   pref_2        String

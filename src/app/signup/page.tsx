@@ -1,7 +1,7 @@
+
 'use client'
 
 import { useState } from 'react'
-import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -9,21 +9,38 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Label } from "@/components/ui/label"
 import { Icons } from "@/components/ui/icons"
 
-export default function SignInPage() {
+export default function SignUpPage() {
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
 
-  const handleCredentialsLogin = async (e: React.FormEvent) => {
+  const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
-    const res = await signIn("credentials", {
-      email,
-      password,
-      redirect: false,
-    })
-    console.log(res)
-    if (res?.ok) {
-      router.push("/dashboard")
+    setIsLoading(true)
+
+    try {
+      const response = await fetch('http://localhost:3000/api/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      })
+
+      if (response.ok) {
+        // Signup successful, redirect to login page or dashboard
+        router.push('/signin')
+      } else {
+        // Handle signup error
+        const data = await response.json()
+        alert(data.message || 'Signup failed')
+      }
+    } catch (error) {
+      console.error('Signup error:', error)
+      alert('An error occurred during signup')
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -31,27 +48,13 @@ export default function SignInPage() {
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <Card className="w-[350px]">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">Sign in</CardTitle>
+          <CardTitle className="text-2xl font-bold text-center">Sign up</CardTitle>
           <CardDescription className="text-center">
-            Choose your preferred sign in method
+            Create an account to get started
           </CardDescription>
         </CardHeader>
-        <CardContent className="grid gap-4">
-          <Button variant="outline" onClick={() => signIn("google")}>
-            <Icons.google className="mr-2 h-4 w-4" />
-            Sign in with Google
-          </Button>
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">
-                Or continue with
-              </span>
-            </div>
-          </div>
-          <form onSubmit={handleCredentialsLogin}>
+        <CardContent>
+          <form onSubmit={handleSignUp}>
             <div className="grid gap-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -60,6 +63,7 @@ export default function SignInPage() {
                 placeholder="m@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                required
               />
             </div>
             <div className="grid gap-2 mt-2">
@@ -69,27 +73,31 @@ export default function SignInPage() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                required
               />
             </div>
-            <Button className="w-full mt-4" type="submit">
-              Sign In with Email
+            <Button className="w-full mt-4" type="submit" disabled={isLoading}>
+              {isLoading ? (
+                <>
+                  <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+                  Signing up...
+                </>
+              ) : (
+                'Sign Up'
+              )}
             </Button>
           </form>
         </CardContent>
         <CardFooter className="flex flex-col">
           <div className="text-sm text-gray-500 text-center mt-2">
-            Don't have an account?{" "}
-            <a href="/signup" className="text-blue-600 hover:underline">
-              Sign up
+            Already have an account?{" "}
+            <a href="/signin" className="text-blue-600 hover:underline">
+              Log in
             </a>
           </div>
-          <Button onClick={()  => {
-            router.push('/admin-login')
-          }} className="w-full mt-4" type="submit">
-             Admin login
-            </Button>
         </CardFooter>
       </Card>
     </div>
   )
 }
+

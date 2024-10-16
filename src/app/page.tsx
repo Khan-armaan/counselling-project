@@ -1,9 +1,12 @@
-import Image from "next/image";
+import { getServerSession } from "next-auth";
+import { redirect } from 'next/navigation'
+import { NEXT_AUTH_CONFIG } from "./api/auth/[...nextauth]/options";
 
-export default function Home() {
-  return (
-   <div>
-    
-   </div>
-  );
+export default async function Page() {
+  const session = await getServerSession(NEXT_AUTH_CONFIG);
+  if (session?.user) {
+    redirect('/dashboard')
+  } else {
+    redirect('/signin')
+  }
 }
